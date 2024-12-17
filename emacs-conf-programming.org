@@ -1,0 +1,896 @@
+
+* Programming Setting
+
+#+begin_src emacs-lisp
+
+  ;; (if (string-equal system-type "windows-nt")
+  ;;     (progn
+  ;;       (add-to-list 'exec-path "C:/tools/apache-maven-3.6.0/bin")
+  ;;       ))
+
+  ;; perl
+  ;; (if (string-equal system-type "windows-nt")
+  ;;     (progn
+  ;;       (add-to-list 'exec-path (concat emacs-home "/misc/lang/perl/strawberry-perl-5.28.0.1-64bit-portable/perl/bin"))
+  ;;       ))
+
+  ;;(add-hook 'prog-mode-hook 'linum-mode)
+  (add-hook 'prog-mode-hook 'hl-line-mode)
+  (add-hook 'prog-mode-hook 'clean-aindent-mode)
+
+  (setq css-indent-offset 2)
+
+  ;; Garbage Collection  (100MB)
+  (setq gc-cons-threshold 104857600)
+
+  (defun eval-region-or-buffer ()
+    (interactive)
+    (let ((debug-on-error t))
+      (cond
+       (mark-active
+        (call-interactively 'eval-region)
+        (message "Region evaluated!")
+        (setq deactivate-mark t))
+       (t
+        (eval-buffer)
+        (message "Buffer evaluated!")))))
+
+  (add-hook 'emacs-lisp-mode-hook
+            (lambda ()
+              (local-set-key (kbd "C-x C-E") 'eval-region-or-buffer)))
+#+end_src
+
+** Common
+
+*** dump jump                                                     :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : dumb jump
+  ;;
+  ;; Dumb Jump is an Emacs "jump to definition" package with support
+  ;; for 40+ programming languages that favors "just working". 
+  ;;
+  ;; SITE    : https://github.com/jacktasia/dumb-jump
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package dumb-jump
+    :ensure t
+    :bind
+    (("M-g o" . dumb-jump-go-other-window)
+     ("M-g j" . dumb-jump-go)
+     ("M-g b" . dumb-jump-back)
+     ("M-g i" . dumb-jump-go-prompt)
+     ("M-g x" . dumb-jump-go-prefer-external)
+     ("M-g z" . dumb-jump-go-prefer-external-other-window)
+     )
+    :config
+    (setq dumb-jump-selector 'ivy)
+    )
+#+end_src
+
+*** flycheck                                                      :package:
+
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :ensure t
+    )
+#+end_src
+
+*** origami                                                       :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : origami
+  ;;
+  ;; A text folding minor mode for Emacs.
+  ;;
+  ;; To some degree, yes. Currently out of the box support is provided for:
+  ;; - C
+  ;; - C++
+  ;; - Clojure
+  ;; - Go
+  ;; - Java
+  ;; - Javascript
+  ;; - PHP
+  ;; - Perl
+  ;; - Python
+  ;; - elisp
+  ;;
+  ;; SITE    : https://github.com/gregsexton/origami.el
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package origami
+    :ensure t
+    :custom
+    (origami-show-fold-header t)
+    :custom-face
+    (origami-fold-replacement-face ((t (:inherit magit-diff-context-highlight))))
+    (origami-fold-fringe-face ((t (:inherit magit-diff-context-highlight))))
+    :init
+    (defhydra origami-hydra (:color blue :hint none)
+      "
+        _:_: recursively toggle node       _a_: toggle all nodes    _t_: toggle node
+        _o_: show only current node        _u_: undo                _r_: redo
+        _R_: reset
+        "
+      (":" origami-recursively-toggle-node)
+      ("a" origami-toggle-all-nodes)
+      ("t" origami-toggle-node)
+      ("o" origami-show-only-node)
+      ("u" origami-undo)
+      ("r" origami-redo)
+      ("R" origami-reset)
+      )
+    :bind
+    (:map origami-mode-map ("C-M-:" . origami-hydra/body))
+    :config
+    (face-spec-reset-face 'origami-fold-header-face)
+    )
+#+end_src
+
+*** company                                                       :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : company
+  ;;
+  ;; GROUP   :
+  ;; SITE    : https://github.com/iquiw/company-restclient
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package company
+    :ensure t
+    :hook (scala-mode . company-mode)
+    :config
+    (setq lsp-completion-provider :capf)
+    ;;(add-hook 'after-init-hook 'global-company-mode)
+    ;;(global-set-key "\t" 'company-complete-common)
+    ;; (global-set-key (kbd "C-<tab>") 'company-complete-common)
+
+    (define-key company-mode-map (kbd "C-c \\") 'company-complete)
+    (define-key company-mode-map (kbd "C-c |") 'company-complete-common)
+
+    ;; (add-hook 'ielm-mode-hook 'company-mode)
+    (add-hook 'ielm-mode-hook 'company-mode)
+    (add-hook 'ielm-mode-hook (lambda () (push 'company-elisp company-backends)))
+    (add-hook 'lisp-interaction-mode-hook 'company-mode)
+    (add-hook 'lisp-interaction-mode-hook (lambda () (push 'company-elisp company-backends)))
+    (add-hook 'emacs-lisp-mode-hook 'company-mode)
+    (add-hook 'emacs-lisp-mode-hook (lambda () (push 'company-elisp company-backends))))
+#+end_src
+
+** LSP
+
+*** lsp-mode                                                      :package:
+
+- SITE :: https://github.com/emacs-lsp/lsp-mode
+
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :hook
+    (lsp-mode . lsp-enable-which-key-integration)
+    (java-mode . #'lsp-deferred)
+    :init
+    (setq
+     lsp-keymap-prefix "C-c l"
+     lsp-enable-file-watchers nil
+     read-process-output-max (* 1024 1024)
+     lsp-completion-provider :capf
+     lsp-idle-delay 0.500
+     ;;lsp-eldoc-render-all nil
+     ;;lsp-highlight-symbol-at-point nil
+     )
+    :config
+    (setq lsp-intelephense-multi-root nil)
+    (with-eval-after-load 'lsp-intelephense
+      (setf (lsp--client-multi-root (gethash 'iph lsp-clients)) nil))
+    (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
+    )
+#+end_src
+
+*** lsp-ui                                                        :package:
+
+- SITE :: https://github.com/emacs-lsp/lsp-ui
+
+#+begin_src emacs-lisp
+  (use-package lsp-ui
+    :ensure t
+    :after (lsp-mode)
+    :bind
+    (:map lsp-ui-mode-map
+          ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+          ([remap xref-find-references] . lsp-ui-peek-find-references)
+          )
+    :init
+    (setq
+     lsp-ui-doc-delay 1.5
+     lsp-ui-doc-position 'bottom
+     lsp-ui-doc-max-width 100
+     )
+    ;;  :config
+    ;;(define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+    ;;(define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+    ;; (lsp-ui-peek-find-workspace-symbol "pattern 0")
+    ;; If the server supports custom cross references
+    ;; (lsp-ui-peek-find-custom 'base "$cquery/base")
+    ;;  (setq lsp-ui-doc-enable nil)
+    ;;  (setq lsp-ui-sideline-enable nil)
+    ;;  (setq lsp-ui-flycheck-enable t)
+    )
+#+end_src
+
+
+*** company-lsp                                                   :package:
+
+- SITE :: https://github.com/tigersoldier/company-lsp
+
+#+begin_src
+  (use-package company-lsp
+    :ensure t
+    )
+#+end_src
+
+  
+** YAML
+
+*** yaml-mode                                                     :package:
+
+yaml-mode - Simple major mode to edit YAML file for emacs
+
+- SITE :: https://github.com/yoshiki/yaml-mode
+
+#+begin_src emacs-lisp
+  (use-package yaml-mode
+    :ensure t
+    :mode (".yaml$")
+    :config
+    (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
+    (add-to-list 'auto-mode-alist '("\\.yaml\\'" . yaml-mode))
+    )
+#+end_src
+
+** Gradle
+
+*** flycheck-gradle                                               :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : flycheck-gradle
+  ;;
+  ;; Flycheck extension for gradle projects.
+  ;;
+  ;; SITE    : https://github.com/jojojames/flycheck-gradle
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package flycheck-gradle
+    :ensure t
+    :commands (flycheck-gradle-setup)
+    :init
+    (mapc
+     (lambda (x)
+       (add-hook x #'flycheck-gradle-setup))
+     '(java-mode-hook kotlin-mode-hook)))
+
+  ;; (use-package flycheck-gradle
+  ;;   :ensure t
+  ;;   :commands (flycheck-gradle-setup)
+  ;;   :init
+  ;;   (mapc
+  ;;    (lambda (x)
+  ;;      (add-hook x #'flycheck-gradle-setup ))
+  ;;    ;; '(java-mode-hook kotlin-mode-hook)
+  ;;    )
+  ;;   )
+
+
+  ;; (if (string-equal system-type "windows-nt")
+  ;;     (progn
+  ;;       (add-to-list 'exec-path "C:/tools/apache-maven-3.6.0/bin")
+  ;;       ))
+#+end_src
+
+** C++
+
+*** cmake-ide                                                     :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : cmake-ide
+  ;;
+  ;; cmake-ide is a package to enable IDE-like features on Emacs for CMake projects
+  ;;
+  ;; SITE    : https://github.com/atilaneves/cmake-ide
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package cmake-ide
+    :ensure t
+    :config
+    (cmake-ide-setup)
+    )
+#+end_src
+
+** Html/JSP
+
+*** web-mode                                                      :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : web-mode
+  ;;
+  ;; GROUP   : Programming
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package web-mode
+    :ensure t
+    :config
+    ;; (setq web-mode-tag-auto-close-style 0)
+    (setq web-mode-markup-indent-offset 2)    ; 태그 들여쓰기
+    (setq web-mode-css-indent-offset 2)       ; css 들여쓰기
+    (setq web-mode-code-indent-offset 2)      ; 스타일, 스크립트 들여쓰기
+    (setq web-mode-style-padding 1)           ; 스타일 패딩
+    (setq web-mode-script-padding 1)          ; 스크립트 패딩
+    (setq web-mode-block-padding 0)           ; 블록 패딩
+    (setq web-mode-comment-style 2)           ; 주석 스타일
+    (setq web-mode-enable-auto-pairing t)     ; 자동 짝 만들기
+    (setq web-mode-enable-css-colorization t) ; css 컬러링
+    (setq web-mode-enable-auto-indentation nil) ; 자동 인덴트 취소
+
+    ;;(add-to-list 'web-mode-indentation-params '"lineup-args" . nil))
+    ;;(add-to-list 'web-mode-indentation-params '"lineup-calls" . nil))
+    ;;(add-to-list 'web-mode-indentation-params '"lineup-concats" . nil))
+    ;;(add-to-list 'web-mode-indentation-params '"lineup-ternary" . nil))
+
+    (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
+
+    ;;(setq auto-mode-alist
+    ;;      (append '(
+    ;;                ("\\.\\(html\\|xhtml\\|shtml\\|tpl\\)\\'" . web-mode)
+    ;;                ("\\.\\(php\\|phtml\\)\\'" . php-mode)
+    ;;                )
+    ;;              auto-mode-alist))
+    ;; 라인 wrapping 설정
+    (add-hook 'web-mode-hook 'toggle-truncate-lines nil)
+    (add-hook 'web-mode-hook 'visual-line-mode nil)
+    )
+#+end_src
+
+*** emmet                                                         :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : emmet-mode
+  ;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package emmet-mode
+    :ensure t
+    :config
+    (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+    (add-hook 'web-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+
+    (add-hook 'emmet-mode-hook
+              (lambda()
+                (define-key emmet-mode-keymap (kbd "C-j") nil)
+                (define-key emmet-mode-keymap (kbd "C-M-j") 'emmet-expand-line)
+                (define-key emmet-mode-keymap (kbd "C-M-;") 'emmet-expand-line)
+                (define-key emmet-mode-keymap (kbd "<M-left>") 'emmet-prev-edit-point)
+                (define-key emmet-mode-keymap (kbd "<M-right>") 'emmet-next-edit-point)
+                ))
+
+                                          ;(setq emmet-preview-default nil)
+                                          ;(setq emmet-move-cursor-between-quotes t)
+    )
+#+end_src
+
+** Perl
+
+#+begin_src emacs-lisp
+  ;; perl
+  ;; (if (string-equal system-type "windows-nt")
+  ;;     (progn
+  ;;       (add-to-list 'exec-path (concat emacs-home "/misc/lang/perl/strawberry-perl-5.28.0.1-64bit-portable/perl/bin"))
+  ;;       ))
+#+end_src
+
+*** cperl-mode                                                    :package:
+
+#+begin_src
+  (use-package cperl-mode
+    :ensure t
+    :config
+    (defalias 'perl-mode 'cperl-mode)
+    (add-to-list 'auto-mode-alist '("\\.\\([pP][L|m]\\||psgi\\|t\\)\\'" . cperl-mode))
+    (add-hook 'cperl-mode-hook (lambda () (flymake-mode t)))
+
+    ;; for plenv user
+    (defun flymake-perl-init ()
+      (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                         'flymake-create-temp-with-folder-structure))
+             (local-file (file-relative-name
+                          temp-file
+                          (file-name-directory buffer-file-name))))
+        (list (guess-plenv-perl-path) (list "-wc" local-file))))
+
+    ;; for perlbrew user
+    (defun flymake-perl-init ()
+      (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                         'flymake-create-temp-inplace))
+             (local-file (file-relative-name
+                          temp-file
+                          (file-name-directory buffer-file-name))))
+        (list (perlbrew-mini-get-current-perl-path)
+              (list "-MProject::Libs" "-wc" local-file))))
+    )
+#+end_src
+
+*** helm-perldoc                                                  :package:
+
+#+begin_src
+  (use-package helm-perldoc
+    :ensure t
+    :config
+    (eval-after-load "cperl-mode"
+      '(progn
+         (helm-perldoc:setup)))
+    (add-hook 'cperl-mode-hook 'helm-perldoc:carton-setup)
+    )
+#+end_src
+  
+** Javascript
+
+*** js2-mode                                                      :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : js2
+  ;;
+  ;; GROUP   : Programming
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package js2-mode
+    :ensure t
+    :config
+    (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+    (add-hook 'js2-mode-hook 'toggle-truncate-lines nil)
+    )
+#+end_src
+
+*** rjsx-mode                                                     :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : rjsx-mode
+  ;;
+  ;; This mode derives from js2-jsx-mode, extending tis parser to support JXS syntax according
+  ;; to the official spec.
+  ;;
+  ;; SITE    : https://github.com/felipeochoa/rjsx-mode
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package rjsx-mode
+    :ensure t
+    :config
+    (add-to-list 'auto-mode-alist '("components\\/.*\\.js\\'" . rjsx-mode))
+    )
+#+end_src
+
+*** tern                                                          :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : tern
+  ;;
+  ;; GROUP   : Programming
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package tern
+    :ensure t
+    :config
+    (add-hook 'js2-mode-hook (lambda () (tern-mode t)))
+    (add-hook 'web-mode-hook (lambda () (tern-mode t)))
+    )
+
+  (use-package tern-auto-complete
+    :ensure t
+    :config
+    (add-hook 'js2-mode-hook (lambda () (auto-complete-mode)))
+    (add-hook 'web-mode-hook (lambda () (auto-complete-mode)))
+    (eval-after-load 'tern
+      '(progn
+         (require 'tern-auto-complete)
+         (setq tern-ac-on-dot t)
+         (tern-ac-setup)))
+    )
+#+end_src
+
+*** vue-mode                                                      :package:
+
+- vue3 :: npm install -g @vue/language-server
+- vue2 :: npm install -g vls
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : vue-mode
+  ;;
+  ;; SITE : https://github.com/AdamNiederer/vue-mode
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package vue-mode
+    :ensure t
+    :config
+    (setq indent-tabs-mode nil
+          js-indent-level 2)
+    (add-hook 'vue-mode-hook #'lsp)
+    )
+#+end_src
+
+*** pug-mode                                                      :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : pug-mode
+  ;;
+  ;; SITE : https://github.com/hlissner/emacs-pug-mode
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package pug-mode
+    :ensure t
+    :config
+    (setq pug-tab-width 2)
+    )
+#+end_src
+
+*** jade-mode                                                     :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : jade-mode
+  ;;
+  ;; SITE : https://github.com/brianc/jade-mode
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package jade-mode
+    :ensure t
+    )
+#+end_src
+
+*** typescript-mode                                               :package:
+
+- SITE :: https://github.com/emacs-typescript/typescript.el
+
+LSP 모드를 통해 세팅하려면 아래 설정을 추가 해줘야 함 (https://emacs-lsp.github.io/lsp-mode/page/lsp-typescript/)
+
+#+begin_src sh
+  $ npm i -g typescript-language-server
+  $ npm i -g typescript
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package typescript-mode
+    :ensure t
+    :config
+    (setq typescript-indent-level 2)
+    (add-hook 'typescript-mode-hook #'lsp)
+    ;;(add-to-list 'auto-mode-alist '("\\.vue\\'" . typescript-mode))
+    ;;(setq auto-mode-alist (delete '("\\.vue\\'" . typescript-mode) auto-mode-alist))
+    )
+#+end_src
+
+*** lsp tailwindcss
+
+- SITE :: https://github.com/merrickluo/lsp-tailwindcss
+
+  #+begin_src
+    (use-package lsp-tailwindcss
+      :ensure t
+      :init
+      (setq lsp-tailwindcss-add-on-mode t)
+      )
+  #+end_src
+
+*** ob-typescript
+
+- SITE :: https://github.com/lurdan/ob-typescript
+
+#+begin_src emacs-lisp
+  (use-package ob-typescript
+    :ensure t
+    :config
+    (setq org-babel-command:typescript "npx -p typescript -- tsc")
+    )
+#+end_src
+
+*** vue-ts-mode                                                   :package:
+
+- SITE :: https://github.com/8uff3r/vue-ts-mode
+
+#+begin_src
+  (use-package vue-ts-mode
+    :ensure t
+    )
+#+end_src
+
+#+RESULTS:
+: t
+
+
+*** tide                                                          :package:
+
+#+begin_src
+  (use-package tide
+    :ensure t
+    :after (typescript-mode company flycheck)
+    :hook ((typescript-mode . tide-setup)
+           (typescript-mode . tide-hl-identifier-mode)
+           (before-save . tide-format-before-save)))
+#+end_src
+
+** Java
+
+#+begin_src
+  (org-babel-load-file "d:/gdrive/tools/emacs/emacs-29.1_2/emacs-conf/emacs-conf-prog-java.org")
+#+end_src
+
+#+RESULTS:
+: Loaded d:/gdrive/tools/emacs/emacs-29.1_2/emacs-conf/emacs-conf-prog-java.el
+
+** PHP 
+
+*** php-mode                                                      :package:
+
+#+begin_src
+  (use-package php-mode
+    :ensure t)
+
+  ;; (add-hook 'php-mode-hook
+  ;;           '(lambda ()
+  ;;              (auto-complete-mode t)
+  ;;              (require 'ac-php)
+  ;;              (setq ac-sources  '(ac-source-php ) )
+  ;;              (yas-global-mode 1)
+
+  ;;              (ac-php-core-eldoc-setup ) ;; enable eldoc
+  ;;              (define-key php-mode-map  (kbd "C-]") 'ac-php-find-symbol-at-point)   ;goto define
+  ;;              (define-key php-mode-map  (kbd "C-t") 'ac-php-location-stack-back)    ;go back
+  ;;              ))
+#+end_src
+
+*** ac-php-core                                                   :package:
+
+#+begin_src emacs-lisp
+  (use-package ac-php-core
+    :ensure t)
+#+end_src
+
+*** php-eldoc                                                     :package:
+
+#+begin_src
+  (use-package php-eldoc
+    :ensure t
+    :config
+    (ac-php-core-eldoc-setup) ;; enable eldoc
+    )
+#+end_src
+
+*** company-php                                                   :package:
+
+#+begin_src
+  (use-package company-php
+    :ensure t
+    :config
+    (add-hook 'php-mode-hook
+              '(lambda ()
+                 (require 'company-php)
+                 (company-mode t)
+                 (make-local-variable 'company-backends)
+                 (add-to-list 'company-backends 'company-ac-php-backend)))
+    )
+#+end_src
+
+*** flymake-php                                                   :package:
+
+#+begin_src
+  (use-package flymake-php
+    :ensure t)
+#+end_src
+
+** Clojure
+
+#+begin_src
+  (use-package cider
+    :ensure t
+    )
+#+end_src
+
+** SQL
+
+*** ejc-sql                                                       :package:
+
+#+begin_src
+  (use-package ejc-sql
+    :ensure t
+    :config
+    (add-hook 'ejc-sql-hook
+              (lambda()
+                ;; (setq cider-lein-parameters "repl :headless :host localhost")
+                (ejc-set-rows-limit 1000)))
+    )
+#+end_src
+  
+*** sql-indent                                                    :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : sql-indent
+  ;;
+  ;; sql-indent.el is a GNU Emacs minor mode which adds support for syntax-based indentation
+  ;; when editing SQL code: TAB indents the current line based on the syntax of the SQL code on previous lines.
+  ;; This works like the indentation for C and C++ code.
+  ;;
+  ;; SITE    : https://github.com/alex-hhh/emacs-sql-indent
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package sql-indent
+    :ensure t
+    )
+#+end_src
+
+** Groovy
+
+*** groovy-mode                                                   :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : groovy-mode
+  ;;
+  ;;
+  ;;
+  ;; SITE    :
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package groovy-mode
+    :ensure t
+    )
+#+end_src
+
+** COMMON-LISP
+
+*** slime                                                         :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : slime
+  ;;
+  ;; SLIME is the Superior Lisp Interaction Mode for Emacs.
+  ;;
+  ;; SITE    : https://github.com/slime/slime
+  ;;           https://common-lisp.net/project/slime/
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package slime
+    :ensure t
+    :commands slime
+    :init
+    (setq inferior-lisp-program (or (executable-find "sbcl")
+                                    (executable-find "/usr/bin/sbcl")
+                                    (executable-find "/usr/local/bin/sbcl")
+                                    "sbcl"
+                                    ))
+    :config
+    (require 'slime-autoloads)
+    (slime-setup '(slime-fancy))
+    (add-hook 'slime-repl-mode-hook (lambda() (paredit-mode t)))
+    )
+#+end_src
+  
+** ELISP
+
+*** ctable                                                        :package:
+
+#+begin_src
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : ctable
+  ;;
+  ;; ctable.el is a table component for emacs lisp
+  ;;
+  ;; SITE    : https://github.com/kiwanami/emacs-ctable
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package ctable
+    :ensure t
+    )
+#+end_src
+
+** Python
+
+*** elpy                                                          :package:
+
+#+begin_src
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : elpy
+  ;;
+  ;; Elpy is an Emacs package to bring powerful Python editing to Emacs.
+  ;;
+  ;; SITE    : https://github.com/jorgenschaefer/elpy
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package elpy
+    :ensure t
+    :init
+    (elpy-enable)
+    )
+#+end_src
+
+*** blacken                                                       :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : blacken
+  ;;
+  ;; Use the python black package to reformat your python buffers.
+  ;;
+  ;; SITE    : https://github.com/pythonic-emacs/blacken
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package blacken
+    :ensure t
+    )
+#+end_src
+  
+** Coffee Script
+
+*** coffee-mode                                                   :package:
+
+#+begin_src
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : coffee-mode
+  ;;
+  ;; An Emacs major mode for CoffeeScript and IcedCoffeeScript.
+  ;;
+  ;; SITE    : https://github.com/defunkt/coffee-mode
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package coffee-mode
+    :ensure t
+    )
+#+end_src
+
+** Visual Basic
+
+*** vbasense                                                      :package:
+
+#+begin_src
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : vbasense
+  ;;
+  ;; This is a extension of Emacs.
+  ;;
+  ;; SITE    : https://github.com/aki2o/emacs-vbasense
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package vbasense
+    :ensure t
+    )
+#+end_src
+
+** Gradle
+
+*** gralde-mode                                                   :package:
+
+#+begin_src
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : gradle-mode
+  ;;
+  ;; GROUP   :
+  ;; SITE    : https://github.com/jacobono/emacs-gradle-mode
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package gradle-mode
+    :ensure t
+    )
+#+end_src
+
+** CSS
+
+#+begin_src emacs-lisp
+  (setq css-indent-offset 2)
+#+end_src

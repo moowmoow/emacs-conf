@@ -1,0 +1,72 @@
+* Help
+
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-h c") 'list-colors-display)
+#+end_src
+
+** which-key                                                       :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : whitch-key
+  ;;
+  ;; GROUP   : Hellp > Whitch Key
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package which-key
+    :ensure t
+    :config
+    (which-key-mode t))
+#+end_src
+  
+** discover-my-major                                               :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : discover-my-major
+  ;;
+  ;; GROUP   : Help
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package discover-my-major
+    :ensure t
+    :config
+    ;; hello world 단축키 취소
+    (global-unset-key (kbd "C-h h"))
+    (define-key 'help-command (kbd "h m") 'discover-my-major))
+#+end_src
+  
+** helm-descbinds                                                  :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : helm-descbinds
+  ;;
+  ;; GROUP   : Convenience > Helm > Helm Descbinds
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use-package helm-descbinds
+    :ensure t
+    :config
+    (global-set-key (kbd "C-h b") 'helm-descbinds)
+    )
+#+end_src
+
+** helm-describe-modes                                             :package:
+
+#+begin_src emacs-lisp
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; PACKAGE : helm-describe-modes
+  ;;
+  ;; helm-describe-modes provides a Helm interface to Emacs’s describe-mode.
+  ;; It lists the major mode, active minor modes,
+  ;; and inactive minor modes using Helm, and provides actions for each mode.
+  ;;
+  ;; SITE    : https://github.com/emacs-helm/helm-describe-modes
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (use-package helm-describe-modes
+    :ensure t
+    :config
+    (global-set-key [remap describe-mode] #'helm-describe-modes)
+    )
+#+end_src

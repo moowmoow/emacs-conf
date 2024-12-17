@@ -1,0 +1,96 @@
+* System Setting
+
+#+begin_src emacs-lisp
+
+  (prefer-coding-system 'utf-8)
+  ;;(setq locale-coding-system 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  ;;(set-selection-coding-system 'utf-8)
+  (set-language-environment "UTF-8")
+  ;;(setq default-process-coding-system '(utf-8 . utf-8))
+
+  (when (eq system-type 'windows-nt)
+    (set-file-name-coding-system 'cp949-dos)
+    ;;(set-file-name-coding-system 'w32-unicode-filenames)
+    )
+
+  ;;(set-file-name-coding-system 'utf-8)
+
+  ;;(set-language-environment "Korean")
+  (setq default-input-method "korean-hangul390")
+  (setq default-korean-keyboard "390")
+
+  ;; input 메서드 변경 단축키 설정
+  (global-set-key (kbd "<Hangul>") 'toggle-input-method)
+  (global-set-key (kbd "<kana>") 'toggle-input-method)
+  (global-set-key (kbd "<S-kana>") 'toggle-input-method)
+  (global-set-key (kbd "S-SPC") 'toggle-input-method)
+  (global-set-key (kbd "C-S-SPC") 'toggle-input-method)
+  ;;(set-language-environment "Korean")
+  (setq default-input-method "korean-hangul390")
+  (setq default-korean-keyboard "390")
+
+  ;; input 메서드 변경 단축키 설정
+  (global-set-key (kbd "<Hangul>") 'toggle-input-method)
+  (global-set-key (kbd "<kana>") 'toggle-input-method)
+  (global-set-key (kbd "<S-kana>") 'toggle-input-method)
+  (global-set-key (kbd "S-SPC") 'toggle-input-method)
+  (global-set-key (kbd "C-S-SPC") 'toggle-input-method)
+#+end_src
+
+** el-get                                                          :package:
+
+  #+begin_src emacs-lisp
+    (use-package el-get
+      :ensure t
+      )
+  #+end_src
+
+** disable-mouse                                                   :package:
+
+  #+begin_src emacs-lisp
+    (use-package disable-mouse
+      :ensure t
+      :config
+      ;;(global-disable-mouse-mode)
+      )
+  #+end_src
+
+  #+RESULTS:
+
+** synom                                                           :package:
+
+  #+begin_src emacs-lisp
+    (use-package symon
+      :ensure t
+      :config
+      ;; (symon-mode)
+      )
+  #+end_src
+
+** system-packages                                                 :package:
+
+This is a collection of functions to make handling installed system packages
+more convenient through emacs.
+
+- SITE :: https://github.com/jabranham/system-packages
+
+#+begin_src emacs-lisp
+  (use-package system-packages
+    :ensure t
+    )
+#+end_src
+
+** helm-system-packages                                            :package:
+
+Helm System Packages is an Emacs-based interface to the package manager of your operating system
+and remote systems as well.
+
+- SITE :: https://github.com/emacs-helm/helm-system-packages
+
+#+begin_src emacs-lisp
+  (use-package helm-system-packages
+    :ensure t
+    )
+#+end_src

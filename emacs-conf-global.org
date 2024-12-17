@@ -1,0 +1,24 @@
+* Global Setting
+
+#+begin_src emacs-lisp
+  (message "[EMACS GLOBAL SETTING]")
+#+end_src
+
+** paradox                                                         :package:
+
+#+begin_src sssemacs-lisp
+  (;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;; PACKAGE : paradox
+   ;;
+   ;; Project for modernizing Emacs' Package Menu.
+   ;;
+   ;; SITE    : https://github.com/Malabarba/paradox
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   (use-package paradox
+     :ensure t
+     :defer t
+     :config
+     (setq paradox-spinner-type 'progress-bar
+           paradox-execute-asynchronously t)
+     )
+#+end_src

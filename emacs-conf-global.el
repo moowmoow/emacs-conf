@@ -1,0 +1,1 @@
+(message "[EMACS GLOBAL SETTING]")
